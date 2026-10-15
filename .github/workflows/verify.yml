@@ -20,3 +20,6 @@ jobs:
         run: npm test
       - name: Expo diagnostics
         run: npx expo-doctor
+
+      - name: iOS JavaScript bundle
+        run: npx expo export --platform ios --output-dir .expo-ios-export
