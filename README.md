@@ -7,7 +7,7 @@
 
 ## 개발 스택
 
-- Expo SDK 54 / React Native 0.81 / React 19.1 / TypeScript
+- Expo SDK 57 / React Native 0.86 / React 19.2 / TypeScript
 - Expo Router, Expo SQLite
 - iPhone 13 mini (375×812pt) / iPhone 13 (390×844pt) 우선
 - Windows + VS Code 또는 Codespaces
@@ -35,9 +35,9 @@ Node.js 22 설치 후 프로젝트 루트에서:
 
 GitHub Codespaces에서 기존 프로젝트를 연 경우 **다시 git clone 하지 마세요**. `/workspaces/fathers-app` 폴더에서 작업하고 `git pull origin feature/phase1-foundation`, `npm install` 순서로 변경사항을 받으세요.
 
-2026년 10월 기준 App Store의 iPhone용 Expo Go는 Expo SDK 54를 지원합니다. 이 브랜치는 무료 iPhone 테스트를 위해 SDK 54를 사용합니다.
+사용자의 iPhone Expo Go는 SDK 57로 확인되었습니다(2026-10-15). 이 브랜치는 SDK 57을 사용합니다. Expo Go 화면에 표시되는 SDK와 프로젝트 SDK가 같은지 확인하세요.
 Expo Go와 터미널 Expo CLI에 동일한 Expo 계정으로 로그인해야 합니다.
-Codespaces에서 실행할 경우 `npx expo start --tunnel --clear`를 사용하세요. `--tunnel` 설정에는 추가 설치 확인이 필요할 수 있습니다.
+Codespaces에서 실행할 경우 `npx expo start --tunnel --clear`를 사용하세요. SDK 전환 후에는 npm 설치 재실행 및 `npx expo start --tunnel --clear`로 Metro 캐시 초기화가 필요합니다. `--tunnel` 설정에는 추가 설치 확인이 필요할 수 있습니다.
 Windows는 로컬 iOS 시뮬레이터를 실행할 수 없습니다. 실제 iPhone에 설치하는 EAS iOS 빌드는 Apple 개발자 서명 절차가 필요할 수 있습니다.
 
 ## 수동 테스트
