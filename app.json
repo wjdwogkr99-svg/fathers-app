@@ -11,11 +11,27 @@
       "supportsTablet": false,
       "bundleIdentifier": "com.fathersapp.naisangil",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "추후 등산 중 위치 기록을 위해 위치 접근이 필요합니다. 1차 버전은 GPS를 사용하지 않습니다."
+        "NSLocationWhenInUseUsageDescription": "등산 중 현재 위치와 이동 경로를 기록하기 위해 위치 권한이 필요합니다."
       }
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "등산 중 위치와 경로를 기록하기 위해 위치를 사용합니다.",
+          "locationAlwaysAndWhenInUsePermission": "화면을 꺼도 산행 경로를 기록하려면 위치 접근을 허용해 주세요.",
+          "isIosBackgroundLocationEnabled": true
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "주변 산을 카메라 화면에서 확인하기 위해 카메라 접근이 필요합니다.",
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false

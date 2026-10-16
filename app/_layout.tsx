@@ -1,3 +1,4 @@
+import '../src/gps/background'; // register headless task at module scope
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { JournalProvider } from '../src/state/JournalContext';
