@@ -98,18 +98,20 @@ export async function allGpsPoints(id:string):Promise<SegmentedSample[]> {
  */
 export async function ingestGpsSample(tripId:string,point:GpsPoint):Promise<boolean> {
   const c=await db();
-  return c.withExclusiveTransactionAsync(async tx=>{
+  let inserted=false;
+  await c.withExclusiveTransactionAsync(async tx=>{
     const trip=await tx.getFirstAsync<Trip>('SELECT * FROM trips WHERE id=?',tripId);
-    if(!trip||trip.source!=='gps'||trip.status!=='recording')return false;
+    if(!trip||trip.source!=='gps'||trip.status!=='recording')return;
     const result=await tx.runAsync(
       'INSERT OR IGNORE INTO gps_samples(tripId,epoch,timestamp,latitude,longitude,accuracyM) VALUES(?,?,?,?,?,?)',
       tripId,trip.gpsEpoch??0,point.timestamp,point.latitude,point.longitude,point.accuracyM);
-    if(result.changes===0)return false;
+    if(result.changes===0)return;
     const all=await tx.getAllAsync<SegmentedSample>(
       'SELECT latitude,longitude,accuracyM,timestamp,epoch FROM gps_samples WHERE tripId=? ORDER BY timestamp',tripId);
     const metrics=calculateTripTrack(all);
     await tx.runAsync('UPDATE trips SET distanceM=?,autoRestMs=?,gpsGoodPoints=? WHERE id=?',
       metrics.distanceM,metrics.autoRestMs,metrics.gpsGoodPoints,tripId);
-    return true;
+    inserted=true;
   });
+  return inserted;
 }
