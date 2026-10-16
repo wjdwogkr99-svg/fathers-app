@@ -81,3 +81,57 @@ Windows는 로컬 iOS 시뮬레이터를 실행할 수 없습니다. 실제 iPho
     npx expo-doctor
 
 GitHub Actions CI에서 위 세 가지를 수행합니다.
+
+---
+
+## PHASE 2 개발 실험 (feature/phase2-gps-ar-ready)
+
+**아직 베타 구현입니다.** Expo Go에서 아이폰 화면이 켜진 상태의 GPS 테스트를 위한
+기능이며, 백그라운드 GPS와 정확한 AR 산봉우리 식별을 완성했다고 주장하지 않습니다.
+
+### 새로 추가한 기능
+
+- 실제 GPS 산행 버튼: 아이폰 위치 권한 요청 후 expo-location의 watchPositionAsync 사용
+- 위도·경도·GPS 정확도·시간을 SQLite gps_samples에 저장
+- 낮은 정확도, 급격한 이동, 긴 GPS 신호 공백을 필터링하여 거리 계산
+- 30분 연속 정지에서 자동 휴식 확정. 수동 일시정지는 별도 세그먼트로 분리
+- 기존 Phase 1 테스트 모드와 GPS 모드 분리 (테스트는 뱃지 불인정)
+- 카메라·나침반을 확인하는 AR 산 찾기 시제품
+- src/ar/peaks.ts: 검증된 산봉우리 좌표를 대상으로 방향·거리·화면상 가로 위치 계산
+- 공식 산봉우리 좌표 데이터는 **미포함**. 산 이름은 현재 표시되지 않습니다
+- src/gps/background.ts: 네이티브 iOS 개발 빌드용 TaskManager 등록 코드 (자동 시작하지 않음)
+- 데이터베이스 v1 → v2 자동 마이그레이션. 이전 산행 데이터 유지
+
+### 왜 아직 실제 등산에 사용하면 안 되나요?
+
+- Expo Go는 잠금 화면·백그라운드 위치 추적을 지원하지 않습니다
+- 화면 잠금, 배터리 절전, 앱 종료로 GPS 수집이 중단될 수 있습니다
+- 자동 휴식 및 GPS 거리 정확도는 실외 도보 테스트 전입니다
+- 지도 그림은 예시이며 오프라인 길찾기 또는 안전장비 기능이 아닙니다
+- 카메라의 산 이름 표시에는 정확한 봉우리 좌표·고도·지형 데이터가 필요합니다
+- SQLite의 로컬 기록은 앱 삭제 시 사라질 수 있어 백업이 아직 필요합니다
+
+### Windows Codespaces + 아이폰 13 mini 실행
+
+Codespaces에서 (중복 clone 하지 않기):
+
+    cd /workspaces/fathers-app
+    git fetch origin
+    git switch feature/phase2-gps-ar-ready
+    npm install
+    npm run typecheck
+    npm test
+    npx expo-doctor
+    npx expo start --tunnel --clear
+
+Expo CLI와 Expo Go는 같은 Expo 계정으로 로그인합니다.
+SDK는 **57**을 유지합니다 (iPhone Expo Go 설치 버전과 일치하는지 확인).
+Expo Go에서 카메라 및 *foreground* 위치 테스트만 진행하세요.
+
+### 다음 개발 단계
+
+1. 아이폰 13 mini에서 실제 걷기 10~20분 테스트, 위치 정확도와 배터리 측정
+2. GPS 원본 및 거리·자동 휴식 계산 검증; 실패한 경우 기록 수정 기능
+3. 정식 iOS development build에서 Always 권한과 백그라운드 TaskManager 활성화
+4. 정확한 산봉우리 좌표와 데이터 출처 확보, 카메라 방향 및 고도·가림 보정
+5. 사진 앨범, 백업/복원, 100대 명산 공식 목록 확인 후 통합

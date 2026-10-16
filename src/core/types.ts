@@ -25,6 +25,7 @@ export interface Trip {
   autoRestMs: number;
   distanceM: number;
   gpsGoodPoints: number;
+  gpsEpoch?: number; // increment after manual pause so two walking segments are not joined
   mountainId: string | null;
   note: string;
 }

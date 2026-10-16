@@ -38,13 +38,24 @@ export default function Hike(){
         .finally(()=>setBusy(false));}},
     ]);
   }
+  const isGps=trip.source==='gps';
+  const quality=trip.status==='paused'?'일시정지':!isGps?'가상 GPS':
+    j.gpsError?'GPS 오류':!j.gpsPoint?'연결 중':now-j.gpsPoint.timestamp>120_000?'GPS 끊김':
+    j.gpsPoint.accuracyM>50?'GPS 약함':'GPS 수신';
   return <Page>
     <View style={{flexDirection:'row',justifyContent:'space-between',alignItems:'center',flexWrap:'wrap',gap:10}}>
-      <H1>등산 진행 중</H1><Pill warning={trip.status==='paused'}>{trip.status==='paused'?'수동 일시정지':'가상 GPS 기록'}</Pill>
+      <H1>등산 진행 중</H1><Pill warning={quality!=='GPS 수신'}>{quality}</Pill>
     </View>
-    <FauxMap/>
+    {isGps ? <Card>
+      <H2>실제 GPS 측정</H2>
+      <P small>지도 기반 경로 표시는 개발 중이에요. 아래에 최근 위치 좌표를 표시합니다.</P>
+      {j.gpsPoint?<P>위도 {j.gpsPoint.latitude.toFixed(5)} · 경도 {j.gpsPoint.longitude.toFixed(5)} · 오차 약 {Math.round(j.gpsPoint.accuracyM)}m</P>:
+        <P>위치 신호를 기다리는 중입니다.</P>}
+      {j.gpsError?<P>{j.gpsError}</P>:null}
+      <P small>위치가 정확하지 않거나 90초 이상 끊긴 구간은 이동거리에 임의로 더하지 않아요.</P>
+    </Card> : <FauxMap/>}
     <Card>
-      <P small>현재 이동 거리 · 시뮬레이션</P>
+      <P small>{isGps?'GPS로 측정한 이동거리':'현재 이동 거리 · 시뮬레이션'}</P>
       <Text allowFontScaling style={{fontSize:45,fontWeight:'900',color:C.dark,textAlign:'center'}}>{(trip.distanceM/1000).toFixed(2)} km</Text>
     </Card>
     <Card>
@@ -52,10 +63,12 @@ export default function Hike(){
       <InfoLine label="휴식 시간" value={formatDuration(restMs(trip,now))}/>
       <InfoLine label="전체 시간" value={formatDuration(elapsedMs(trip,now))}/>
     </Card>
-    {trip.status==='paused'?<Card><H2>일시정지 중</H2><P>계속하기를 누르면 테스트 기록이 재개돼요.</P></Card>:null}
+    {trip.status==='paused'?<Card><H2>일시정지 중</H2><P>계속하기를 누르면 기록이 재개돼요.</P></Card>:null}
     <PrimaryButton title={trip.status==='paused'?'▶ 계속하기':'Ⅱ 일시정지'} variant="secondary" onPress={()=>void toggle()} disabled={busy}/>
     <PrimaryButton title="■ 등산 종료" variant="danger" onPress={confirmEnd} disabled={busy}/>
     <PrimaryButton title="30분 자동 휴식 규칙 확인" variant="secondary" onPress={()=>nav.push('/rest-demo')}/>
-    <P small>테스트 모드에서는 5초마다 가상 거리 12m가 추가됩니다. 화면 잠금 시 GPS 기록은 아직 지원하지 않습니다.</P>
+    <P small>{isGps?
+      '실제 위치 기록은 PHASE 2 실험 기능입니다. Expo Go는 백그라운드 GPS를 지원하지 않으므로 화면을 잠근 산행에 사용하지 마세요. 앱 강제 종료 후 연속 기록은 보장하지 않습니다.':
+      '테스트 모드에서는 5초마다 가상 거리 12m가 추가됩니다. 실제 위치를 사용하지 않습니다.'}</P>
   </Page>;
 }

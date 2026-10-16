@@ -1,14 +1,19 @@
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { Mountain, Trip } from '../core/types';
-import { allMountains, allTrips, createMountain, deleteTrip, findTrip, saveTrip } from '../storage/database';
+import * as Location from 'expo-location';
+import { GpsPoint, Mountain, Trip } from '../core/types';
+import { allMountains, allTrips, createMountain, deleteTrip, findTrip, ingestGpsSample, latestGpsPoint, saveTrip } from '../storage/database';
+import { fromExpoLocation, requireForegroundGps } from '../gps/permissions';
 
 interface JournalApi {
   ready:boolean;
   error:string|null;
+  gpsError:string|null;
+  gpsPoint:GpsPoint|null;
   trips:Trip[];
   mountains:Mountain[];
   reload:()=>Promise<void>;
   startDemo:()=>Promise<Trip>;
+  startGps:()=>Promise<Trip>;
   demoStep:(id:string)=>Promise<void>;
   pause:(id:string)=>Promise<void>;
   resume:(id:string)=>Promise<void>;
@@ -26,6 +31,8 @@ export function JournalProvider({children}:{children:ReactNode}) {
   const [mountains,setMountains] = useState<Mountain[]>([]);
   const [ready,setReady] = useState(false);
   const [error,setError] = useState<string|null>(null);
+  const [gpsError,setGpsError] = useState<string|null>(null);
+  const [gpsPoint,setGpsPoint] = useState<GpsPoint|null>(null);
   const reload = useCallback(async()=>{
     const [newTrips,newMountains]=await Promise.all([allTrips(),allMountains()]);
     setTrips(newTrips); setMountains(newMountains); setError(null);
@@ -40,17 +47,48 @@ export function JournalProvider({children}:{children:ReactNode}) {
     if(!trip) throw new Error('산행 기록을 찾을 수 없습니다.');
     return trip;
   },[]);
+  const activeGps=trips.find(t=>t.source==='gps'&&t.status==='recording');
+  useEffect(()=>{
+    if(!ready||!activeGps){setGpsError(null);return;}
+    let cancelled=false,sub:Location.LocationSubscription|null=null;
+    setGpsError(null);
+    latestGpsPoint(activeGps.id).then(p=>{if(!cancelled)setGpsPoint(p);}).catch(()=>{});
+    Location.getForegroundPermissionsAsync().then(p=>{
+      if(p.status!=='granted')throw new Error('위치 권한이 필요합니다. 아이폰 설정을 확인해 주세요.');
+      return Location.watchPositionAsync({
+        accuracy:Location.Accuracy.High,distanceInterval:8,timeInterval:5000
+      },location=>{
+        if(cancelled)return;
+        const point=fromExpoLocation(location);
+        setGpsPoint(point);
+        ingestGpsSample(activeGps.id,point).then(()=>{if(!cancelled)return reload();}).catch(e=>{
+          if(!cancelled)setGpsError('GPS 좌표를 저장하지 못했어요. 기록을 확인해 주세요.');
+          console.warn(e);
+        });
+      });
+    }).then(s=>{if(cancelled)s.remove();else sub=s;}).catch(e=>{
+      if(!cancelled)setGpsError(e instanceof Error?e.message:'GPS 연결에 실패했습니다.');
+    });
+    return ()=>{cancelled=true;sub?.remove();};
+  },[ready,activeGps?.id,activeGps?.status,reload]);
   const startDemo=useCallback(async()=>{
     const existing=(await allTrips()).find(t=>t.status!=='finished');
     if(existing) return existing;
     const t:Trip={id:makeId(),source:'demo',status:'recording',startedAt:Date.now(),
-      endedAt:null,pausedAt:null,manualPausedMs:0,autoRestMs:0,distanceM:0,gpsGoodPoints:0,mountainId:null,note:''};
+      endedAt:null,pausedAt:null,manualPausedMs:0,autoRestMs:0,distanceM:0,gpsGoodPoints:0,gpsEpoch:0,mountainId:null,note:''};
+    await apply(t); return t;
+  },[apply]);
+  const startGps=useCallback(async()=>{
+    const existing=(await allTrips()).find(t=>t.status!=='finished');
+    if(existing)return existing;
+    await requireForegroundGps();
+    const t:Trip={id:makeId(),source:'gps',status:'recording',startedAt:Date.now(),
+      endedAt:null,pausedAt:null,manualPausedMs:0,autoRestMs:0,distanceM:0,gpsGoodPoints:0,gpsEpoch:0,mountainId:null,note:''};
     await apply(t); return t;
   },[apply]);
   const demoStep=useCallback(async(id:string)=>{
     const t=await get(id);
     if(t.source!=='demo'||t.status!=='recording')return;
-    // Explicitly artificial movement; never earns a GPS badge.
     await apply({...t,distanceM:t.distanceM+12});
   },[apply,get]);
   const pause=useCallback(async(id:string)=>{
@@ -60,7 +98,8 @@ export function JournalProvider({children}:{children:ReactNode}) {
   const resume=useCallback(async(id:string)=>{
     const t=await get(id); if(t.status!=='paused')return;
     const now=Date.now();
-    await apply({...t,status:'recording',manualPausedMs:t.manualPausedMs+Math.max(0,now-(t.pausedAt??now)),pausedAt:null});
+    await apply({...t,status:'recording',manualPausedMs:t.manualPausedMs+Math.max(0,now-(t.pausedAt??now)),
+      gpsEpoch:(t.gpsEpoch??0)+1,pausedAt:null});
   },[apply,get]);
   const finish=useCallback(async(id:string)=>{
     const t=await get(id);
@@ -81,7 +120,7 @@ export function JournalProvider({children}:{children:ReactNode}) {
   const addPast=useCallback(async(mountainId:string,memo:string)=>{
     const now=Date.now();
     await apply({id:makeId(),source:'past',status:'finished',startedAt:now,endedAt:now,
-      pausedAt:null,manualPausedMs:0,autoRestMs:0,distanceM:0,gpsGoodPoints:0,mountainId,note:memo});
+      pausedAt:null,manualPausedMs:0,autoRestMs:0,distanceM:0,gpsGoodPoints:0,gpsEpoch:0,mountainId,note:memo});
   },[apply]);
   const addMountain=useCallback(async(name:string,region:string)=>{
     const normalized=name.trim();
@@ -92,8 +131,8 @@ export function JournalProvider({children}:{children:ReactNode}) {
     await createMountain(m);await reload();return m;
   },[reload]);
   const remove=useCallback(async(id:string)=>{await deleteTrip(id);await reload();},[reload]);
-  const value=useMemo(()=>({ready,error,trips,mountains,reload,startDemo,demoStep,pause,resume,finish,assign,note,addPast,addMountain,remove}),
-    [ready,error,trips,mountains,reload,startDemo,demoStep,pause,resume,finish,assign,note,addPast,addMountain,remove]);
+  const value=useMemo(()=>({ready,error,gpsError,gpsPoint,trips,mountains,reload,startDemo,startGps,demoStep,pause,resume,finish,assign,note,addPast,addMountain,remove}),
+    [ready,error,gpsError,gpsPoint,trips,mountains,reload,startDemo,startGps,demoStep,pause,resume,finish,assign,note,addPast,addMountain,remove]);
   return <Context.Provider value={value}>{children}</Context.Provider>;
 }
 export function useJournal(){const value=useContext(Context);if(!value)throw new Error('JournalProvider가 없습니다.');return value;}
