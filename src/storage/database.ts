@@ -73,9 +73,9 @@ export async function saveTrip(trip:Trip):Promise<void> {
       'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET '+
       'source=excluded.source,status=excluded.status,startedAt=excluded.startedAt,endedAt=excluded.endedAt,'+
       'pausedAt=excluded.pausedAt,manualPausedMs=excluded.manualPausedMs,'+
-      'distanceM=CASE WHEN excluded.source="gps" THEN trips.distanceM ELSE excluded.distanceM END,'+
-      'autoRestMs=CASE WHEN excluded.source="gps" THEN trips.autoRestMs ELSE excluded.autoRestMs END,'+
-      'gpsGoodPoints=CASE WHEN excluded.source="gps" THEN trips.gpsGoodPoints ELSE excluded.gpsGoodPoints END,'+
+      'distanceM=CASE WHEN excluded.source=\'gps\' THEN trips.distanceM ELSE excluded.distanceM END,'+
+      'autoRestMs=CASE WHEN excluded.source=\'gps\' THEN trips.autoRestMs ELSE excluded.autoRestMs END,'+
+      'gpsGoodPoints=CASE WHEN excluded.source=\'gps\' THEN trips.gpsGoodPoints ELSE excluded.gpsGoodPoints END,'+
       'gpsEpoch=excluded.gpsEpoch,'+
       'mountainId=excluded.mountainId,note=excluded.note',
       trip.id,trip.source,trip.status,trip.startedAt,trip.endedAt,trip.pausedAt,
