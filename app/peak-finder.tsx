@@ -54,7 +54,7 @@ export default function PeakFinder(){
           </Text>
         </View>
         {labels.map(item=><View key={item.peak.id} pointerEvents="none"
-          style={{position:'absolute',left:(item.horizontalFraction*75)+'%',top:'42%',
+          style={{position:'absolute',left:`${Math.round(item.horizontalFraction*75)}%` as `${number}%`,top:'42%',
             backgroundColor:C.green,padding:8,borderRadius:9}}>
           <Text style={{color:C.white,fontSize:18,fontWeight:'800'}}>{item.peak.name}</Text>
         </View>)}
