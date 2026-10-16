@@ -71,6 +71,25 @@ export function JournalProvider({children}:{children:ReactNode}) {
     });
     return ()=>{cancelled=true;sub?.remove();};
   },[ready,activeGps?.id,activeGps?.status,reload]);
+  // iOS distanceInterval may not deliver a stationary fix; periodically sample
+  // while foreground tracking so a 30-minute *confirmed* rest can be detected.
+  useEffect(()=>{
+    if(!ready||!activeGps)return;
+    let cancelled=false,busy=false;
+    const timer=setInterval(()=>{
+      if(cancelled||busy)return;
+      busy=true;
+      Location.getCurrentPositionAsync({accuracy:Location.Accuracy.High}).then(async l=>{
+        if(cancelled)return;
+        const point=fromExpoLocation(l);
+        setGpsPoint(point);
+        await ingestGpsSample(activeGps.id,point);
+        if(!cancelled)await reload();
+      }).catch(e=>{if(!cancelled)console.warn('정지 확인 GPS 샘플을 받지 못했습니다.',e);})
+        .finally(()=>{busy=false;});
+    },60_000);
+    return ()=>{cancelled=true;clearInterval(timer);};
+  },[ready,activeGps?.id,activeGps?.status,reload]);
   const startDemo=useCallback(async()=>{
     const existing=(await allTrips()).find(t=>t.status!=='finished');
     if(existing) return existing;
