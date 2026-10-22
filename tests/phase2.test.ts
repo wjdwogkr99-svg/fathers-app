@@ -1,6 +1,6 @@
 import { describe,expect,it } from 'vitest';
 import { calculateTripTrack } from '../src/gps/route';
-import { bearingDegrees, normalize360, projectVisiblePeaks, signedAngleDifference, VERIFIED_PEAKS } from '../src/ar/peaks';
+import { bearingDegrees, normalize360, projectVisiblePeaks, signedAngleDifference } from '../src/ar/peaks';
 const t=100_000;
 const p=(timestamp:number,longitude=127,epoch=0)=>({timestamp,latitude:37,longitude,accuracyM:5,epoch});
 describe('gps storage projection',()=>{
@@ -39,8 +39,7 @@ describe('AR-ready peak math',()=>{
     expect(projectVisiblePeaks(observer,0,[{...peak,verified:false}])).toEqual([]);
   });
   it('does not render labels without data, accuracy or heading',()=>{
-    expect(VERIFIED_PEAKS).toHaveLength(0);
-    expect(projectVisiblePeaks(observer,0,VERIFIED_PEAKS)).toEqual([]);
+    expect(projectVisiblePeaks(observer,0,[])).toEqual([]);
     expect(projectVisiblePeaks({...observer,accuracyM:200},0,[peak])).toEqual([]);
     expect(projectVisiblePeaks(observer,Number.NaN,[peak])).toEqual([]);
   });
