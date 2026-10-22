@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "peaks": [
+    {
+      "id": "osm-node-5515194671",
+      "mountainId": "sample-bukhansan",
+      "name": "북한산 · 백운대",
+      "region": "서울·경기",
+      "source": {
+        "provider": "OpenStreetMap",
+        "nodeId": 5515194671,
+        "version": 5,
+        "url": "https://api.openstreetmap.org/api/0.6/node/5515194671/5",
+        "retrievedAt": "2026-10-22T07:16:51+00:00",
+        "license": "ODbL-1.0",
+        "sha256": "91e2f20b599af602f395c0c13c7f81d3f96c6f1bde7f3004d8c5a5093b7466b8",
+        "nodeTimestamp": "2024-01-04T07:04:01Z",
+        "latitude": 37.6586301,
+        "longitude": 126.9780032,
+        "tags": {
+          "natural": "peak",
+          "name": "북한산(백운대)",
+          "ele": "835.57"
+        }
+      }
+    },
+    {
+      "id": "osm-node-5515194666",
+      "mountainId": "sample-dobongsan",
+      "name": "도봉산 · 자운봉",
+      "region": "서울·경기",
+      "source": {
+        "provider": "OpenStreetMap",
+        "nodeId": 5515194666,
+        "version": 6,
+        "url": "https://api.openstreetmap.org/api/0.6/node/5515194666/6",
+        "retrievedAt": "2026-10-22T07:16:51+00:00",
+        "license": "ODbL-1.0",
+        "sha256": "70dbd274bf01a7e82bf932f63282a57ccf1bdb603a1c466586cd7ecfb83b68fa",
+        "nodeTimestamp": "2023-11-26T23:57:00Z",
+        "latitude": 37.6988424,
+        "longitude": 127.0154594,
+        "tags": {
+          "natural": "peak",
+          "name": "도봉산자운봉",
+          "ele": "740.2"
+        }
+      }
+    },
+    {
+      "id": "osm-node-442878166",
+      "mountainId": "sample-gwanaksan",
+      "name": "관악산",
+      "region": "서울·경기",
+      "source": {
+        "provider": "OpenStreetMap",
+        "nodeId": 442878166,
+        "version": 14,
+        "url": "https://api.openstreetmap.org/api/0.6/node/442878166/14",
+        "retrievedAt": "2026-10-22T07:16:51+00:00",
+        "license": "ODbL-1.0",
+        "sha256": "f4c05008daefbf46b031f20fe84ddff14b0f2fe475ee81c89cd18d030ca566ca",
+        "nodeTimestamp": "2023-07-12T03:26:25Z",
+        "latitude": 37.4451398,
+        "longitude": 126.9642379,
+        "tags": {
+          "natural": "peak",
+          "name": "관악산",
+          "ele": "632"
+        }
+      }
+    }
+  ]
+}

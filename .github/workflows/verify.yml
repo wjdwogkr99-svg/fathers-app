@@ -1,4 +1,4 @@
-name: Phase 1 validation
+name: App validation
 on:
   push:
     branches: ["feature/**", main]
@@ -13,7 +13,7 @@ jobs:
         with:
           node-version: 22
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: TypeScript
         run: npm run typecheck
       - name: Domain tests

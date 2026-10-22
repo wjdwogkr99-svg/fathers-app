@@ -17,6 +17,12 @@
     "plugins": [
       "expo-router",
       [
+        "expo-sensors",
+        {
+          "motionPermission": "산봉우리 방향 후보를 표시할 때 아이폰 기울기를 확인하기 위해 동작 센서를 사용합니다."
+        }
+      ],
+      [
         "expo-location",
         {
           "locationWhenInUsePermission": "등산 중 위치와 경로를 기록하기 위해 위치를 사용합니다.",
